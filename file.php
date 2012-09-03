@@ -42,7 +42,7 @@ class CS_Controller extends CI_CONTROLLER {
 		}
 	}
 
-	// @return nothing
+	//@return nothing
 	public function log_out() {
 
 		if($this->is_logged_in) {

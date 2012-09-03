@@ -1,5 +1,6 @@
 #include <iostream>
 #include <unistd.h>
+#include <iomanip>
 #include <stdlib.h>
 
 #include <QString>
@@ -7,6 +8,12 @@
 #include <QDir>
 #include <QDebug>
 #include <QStack>
+
+#define RESET   "\033[0m"
+#define BLACK   "\033[30m"      /* Black */
+#define RED     "\033[31m"      /* Red */
+#define GREEN   "\033[32m"      /* Green */
+#define YELLOW  "\033[33m"      /* Yellow */
 
 //////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////
@@ -31,7 +38,7 @@ void printbit_php(QFileInfo & _file, QString searchword, QString stopword);
 void handle_param(QString & path, int argc, char* argv[]);
 void handle_single_file();
 void print_until(QStringList & list, QString stop);
-QString print_after(QStringList & list, QString stop);
+QString return_message(QStringList & list);
 
 #define PARAM_IS_NULL 0
 #define PARAM_IS_DIR 1
@@ -163,6 +170,7 @@ void printbit_php(QFileInfo & _file, QString searchword, QString stopword)
 			QStringList line_list = line.split(" ");
 			line_list.replaceInStrings(" ", "");
 			line_list.replaceInStrings("\n", "");
+			line_list.replaceInStrings("\t", "");
 
 			if(line_list.indexOf("class") != -1 && line_list.indexOf("{") != -1) {
 				closers.push('{');
@@ -178,8 +186,8 @@ void printbit_php(QFileInfo & _file, QString searchword, QString stopword)
 			for(int i = 0; i < open; i++) closers.push('{');
 			for(int i = 0; i < close; i++) closers.pop();
 
-			if(line_list.indexOf("@return") != -1) {
-				return_buffer.append(print_after(line_list, "//"));
+			if(line_list.indexOf("@return") != -1 || line_list.indexOf("//@return") != -1) {
+				return_buffer.append(return_message(line_list));
 			}
 
 			if(line_list.indexOf("function") != -1) {
@@ -208,21 +216,37 @@ void printbit_php(QFileInfo & _file, QString searchword, QString stopword)
 void print_until(QStringList & list, QString stop) {
 
 	for(int i = 0; i < list.size(); i++) {
-		if(list.at(i) != stop) 
+		if(list.at(i) != stop) {
+			if(list.at(i) == "function") {
+			}
+
 			std::cout << list.at(i).toStdString() << " ";
+
+		}
 	}
 
 }
 
 
-QString print_after(QStringList & list, QString stop) {
+QString return_message(QStringList & list) {
 
-	QString *get = new QString;
-	for(int i = list.indexOf(stop); i < list.size(); i++) {
-		if(list.at(i) != stop) 
-			get += list.at(i) + " ";
+	QString get("");
+	
+
+	int indice;
+	if(list.at(0) == "//@return") {
+		get.append("@return ");
+		indice = 1;
+	} else if(list.at(0) == "//") {
+		get.append("@return ");
+		indice = 2;
 	}
 
-	return *get;
+
+	for(int i = indice; i < list.size(); i++) {
+		get += list.at(i) + " ";
+	}
+
+	return get;
 
 }
